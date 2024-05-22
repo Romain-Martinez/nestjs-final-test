@@ -1,8 +1,21 @@
-import { AppModule } from '../src/app.module';
-import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
-import { UserService } from '../src/user/user.service';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as request from 'supertest';
+
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+
+import { AppModule } from '../src/app.module';
+import { UserService } from '../src/modules/user/services/user.service';
+
+async function createNestApplication() {
+    process.env.DATABASE_NAME = 'test_nestjs-final-test-db_USERS';
+
+    const module = await Test.createTestingModule({
+        imports: [AppModule],
+    }).compile();
+
+    return module.createNestApplication();
+}
 
 describe('UserController', () => {
     let app: INestApplication;
@@ -11,6 +24,7 @@ describe('UserController', () => {
     describe('POST /', () => {
         beforeEach(async () => {
             app = await createNestApplication();
+            app.useGlobalPipes(new ValidationPipe());
             userService = app.get(UserService);
 
             await app.init();
@@ -72,13 +86,3 @@ describe('UserController', () => {
         });
     });
 });
-
-async function createNestApplication() {
-    process.env.DATABASE_NAME = 'test_nestjs-final-test-db_USERS';
-
-    const module = await Test.createTestingModule({
-        imports: [AppModule],
-    }).compile();
-
-    return module.createNestApplication();
-}

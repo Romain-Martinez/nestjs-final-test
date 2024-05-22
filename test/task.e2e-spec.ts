@@ -1,9 +1,56 @@
-import { AppModule } from '../src/app.module';
-import { INestApplication } from '@nestjs/common';
-import { TaskService } from '../src/task/task.service';
-import { Test } from '@nestjs/testing';
-import { UserService } from '../src/user/user.service';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as request from 'supertest';
+
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+
+import { AppModule } from '../src/app.module';
+import { TaskService } from '../src/modules/task/services/task.service';
+import { UserService } from '../src/modules/user/services/user.service';
+
+async function createNestApplication(): Promise<INestApplication> {
+    process.env.DATABASE_NAME = 'test_nestjs-final-test-db_TASKS';
+
+    const module = await Test.createTestingModule({
+        imports: [AppModule],
+    }).compile();
+
+    return module.createNestApplication();
+}
+
+async function createUserUsing(
+    userService: UserService,
+    email: string,
+): Promise<any> {
+    await userService.addUser(email);
+    return userService.getUser(email) as any;
+}
+
+async function createTasksFor2DifferentUsers(
+    userService: UserService,
+    taskService: TaskService,
+): Promise<{ user: any; tasks: any[] }[]> {
+    const createdUser1 = await createUserUsing(userService, 'email_1@test.com');
+    for (let count = 0; count < 15; count++) {
+        await taskService.addTask(`task #${count}`, createdUser1.id, 1);
+    }
+
+    const createdUser2 = await createUserUsing(userService, 'email_2@test.com');
+    for (let count = 0; count < 15; count++) {
+        await taskService.addTask(`task #${count}`, createdUser2.id, 1);
+    }
+
+    return [
+        {
+            user: createdUser1,
+            tasks: await taskService.getUserTasks(createdUser1.id),
+        },
+        {
+            user: createdUser2,
+            tasks: await taskService.getUserTasks(createdUser2.id),
+        },
+    ];
+}
 
 describe('TaskController', () => {
     let app: INestApplication;
@@ -14,6 +61,7 @@ describe('TaskController', () => {
     describe('GET /user/:userId', () => {
         beforeEach(async () => {
             app = await createNestApplication();
+            app.useGlobalPipes(new ValidationPipe());
             taskService = app.get(TaskService);
             userService = app.get(UserService);
 
@@ -51,10 +99,11 @@ describe('TaskController', () => {
 
                 expect(response.status).toBe(200);
 
-                const haveAllTasksBeenReturned = response.body.every((task) =>
-                    created.tasks.some(
-                        (createdTask) => createdTask.id === task.id,
-                    ),
+                const haveAllTasksBeenReturned = response.body.every(
+                    (task: { id: any }) =>
+                        created.tasks.some(
+                            (createdTask) => createdTask.id === task.id,
+                        ),
                 );
                 expect(haveAllTasksBeenReturned).toBe(true);
             }
@@ -64,6 +113,7 @@ describe('TaskController', () => {
     describe('POST /', () => {
         beforeEach(async () => {
             app = await createNestApplication();
+            app.useGlobalPipes(new ValidationPipe());
             taskService = app.get(TaskService);
             userService = app.get(UserService);
 
@@ -140,47 +190,3 @@ describe('TaskController', () => {
         });
     });
 });
-
-async function createTasksFor2DifferentUsers(
-    userService: UserService,
-    taskService: TaskService,
-): Promise<{ user: any; tasks: any[] }[]> {
-    const createdUser1 = await createUserUsing(userService, 'email_1@test.com');
-    for (let count = 0; count < 15; count++) {
-        await taskService.addTask(`task #${count}`, createdUser1.id, 1);
-    }
-
-    const createdUser2 = await createUserUsing(userService, 'email_2@test.com');
-    for (let count = 0; count < 15; count++) {
-        await taskService.addTask(`task #${count}`, createdUser2.id, 1);
-    }
-
-    return [
-        {
-            user: createdUser1,
-            tasks: await taskService.getUserTasks(createdUser1.id),
-        },
-        {
-            user: createdUser2,
-            tasks: await taskService.getUserTasks(createdUser2.id),
-        },
-    ];
-}
-
-async function createNestApplication(): Promise<INestApplication> {
-    process.env.DATABASE_NAME = 'test_nestjs-final-test-db_TASKS';
-
-    const module = await Test.createTestingModule({
-        imports: [AppModule],
-    }).compile();
-
-    return module.createNestApplication();
-}
-
-async function createUserUsing(
-    userService: UserService,
-    email: string,
-): Promise<any> {
-    await userService.addUser(email);
-    return userService.getUser(email) as any;
-}

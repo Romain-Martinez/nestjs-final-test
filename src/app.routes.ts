@@ -1,6 +1,7 @@
 import { Routes } from '@nestjs/core';
-import { UserModule } from './user/user.module';
-import { TaskModule } from './task/task.module';
+
+import { TaskModule } from './modules/task/task.module';
+import { UserModule } from './modules/user/user.module';
 
 export const routes: Routes = [
     {

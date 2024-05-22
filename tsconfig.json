@@ -1,21 +1,25 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "incremental": true,
-    "skipLibCheck": true,
-    "strictNullChecks": false,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
+      "module": "commonjs",
+      "strict": true,
+      "declaration": true,
+      "removeComments": true,
+      "emitDecoratorMetadata": true,
+      "experimentalDecorators": true,
+      "resolveJsonModule": true,
+      "target": "ES6",
+      "sourceMap": true,
+      "noErrorTruncation": true,
+      "outDir": "./dist",
+      "baseUrl": ".",
+      "paths": {
+          "@infrastructures/*": ["./src/infrastructure/*"],
+          "@modules/*": ["./src/modules/*"],
+          "@helpers/*": ["./src/helpers/*"],
+      },
+      "incremental": true,
+      "forceConsistentCasingInFileNames": false,
+      "lib": ["ES6", "ESNext"],
+      "types": ["jest", "node"]
   }
 }
